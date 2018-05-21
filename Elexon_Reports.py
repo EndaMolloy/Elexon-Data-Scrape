@@ -2,6 +2,7 @@ import requests
 import pandas as pd
 from lxml import etree as et
 from collections import defaultdict
+from data_clean import drop_duplicates
 import settings
 
 #   Create dictionary of required BM reports
@@ -37,8 +38,6 @@ def convertToDF(xml, cols):
                 output[child.tag].append(child.text)
 
     df = pd.DataFrame().from_dict(output)
-
-    print(df)
     return
 
 def main():
