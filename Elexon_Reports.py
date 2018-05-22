@@ -29,6 +29,7 @@ def convertToDF(xml, cols):
 
     #   add specific report columns
     columns.extend(cols)
+    #print(columns)
 
     output = defaultdict(list)
 
@@ -38,6 +39,10 @@ def convertToDF(xml, cols):
                 output[child.tag].append(child.text)
 
     df = pd.DataFrame().from_dict(output)
+    #sorted_df = df.reindex(columns=columns)
+    #df['settlementPeriod']= df['settlementPeriod'].astype(int)
+    #df.sort_values(by='settlementPeriod', ascending=True)
+    print(df)
     return
 
 def main():
