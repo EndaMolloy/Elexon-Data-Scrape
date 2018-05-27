@@ -6,7 +6,7 @@ from data_clean import drop_duplicates
 import settings
 
 #   Create dictionary of required BM reports
-bm_reports = {'B1770': ['imbalancePriceAmountGBP', 'priceCategory'],
+bm_reports = {'B1770': ['imbalancePriceAmountGBP'],
                'B1780': ['imbalanceQuantityMAW']}
 columns = ['settlementDate', 'settlementPeriod']
 #bm_reports = {'B1780': ['imbalanceQuantityMAW']}
@@ -28,21 +28,32 @@ def convertToDF(xml, cols):
     root = et.fromstring(xml)
 
     #   add specific report columns
-    columns.extend(cols)
-    #print(columns)
+    colHeadings = [*columns]
+    colHeadings.extend(cols)
 
     output = defaultdict(list)
 
+    #   append revelant data to output dict
     for item in root.findall("./responseBody/responseList/item"):
         for child in item:
-            if child.tag in columns:
+            if child.tag in colHeadings:
                 output[child.tag].append(child.text)
 
+    #   convert dict to a pandas dataframe
     df = pd.DataFrame().from_dict(output)
-    #sorted_df = df.reindex(columns=columns)
-    #df['settlementPeriod']= df['settlementPeriod'].astype(int)
-    #df.sort_values(by='settlementPeriod', ascending=True)
-    print(df)
+
+    #   reorder df to required format
+    df_reindexed = df.reindex(columns=colHeadings)
+    df_reindexed['settlementPeriod']= df_reindexed['settlementPeriod'].astype(int)
+    sorted_df = df_reindexed.sort_values(by='settlementPeriod', ascending=True)
+
+    if len(sorted_df) > 50:
+        print(sorted_df.drop_duplicates(['settlementPeriod'], keep='first',inplace = True))
+
+    idx = pd.DatetimeIndex(freq='30min', start=sorted_df.index[0], end=sorted_df.index[-1])
+
+
+    print(idx)
     return
 
 def main():
