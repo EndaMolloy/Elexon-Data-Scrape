@@ -10,6 +10,7 @@ bm_reports = {'B1770': ['imbalancePriceAmountGBP'],
                'B1780': ['imbalanceQuantityMAW']}
 columns = ['settlementDate', 'settlementPeriod']
 #bm_reports = {'B1780': ['imbalanceQuantityMAW']}
+resultsList = []
 
 def getXMLReport(reportCode):
 
@@ -48,12 +49,14 @@ def convertToDF(xml, cols):
     sorted_df = df_reindexed.sort_values(by='settlementPeriod', ascending=True)
 
     if len(sorted_df) > 50:
-        print(sorted_df.drop_duplicates(['settlementPeriod'], keep='first',inplace = True))
+        sorted_df.drop_duplicates(['settlementPeriod'], keep='first',inplace = True)
 
-    idx = pd.DatetimeIndex(freq='30min', start=sorted_df.index[0], end=sorted_df.index[-1])
+    resultsList.append(output)
+    return
 
+def mergeFrames():
 
-    print(idx)
+    print(len(resultsList))
     return
 
 def main():
@@ -63,6 +66,8 @@ def main():
     for report, cols in bm_reports.items():
         xmlReport = getXMLReport(report)
         convertToDF(xmlReport, cols)
+
+    mergeFrames()
 
 if __name__ == '__main__':
     main()
