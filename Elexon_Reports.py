@@ -1,5 +1,5 @@
 import requests
-import psycopg2
+import pymysql.cursors
 import pandas as pd
 from lxml import etree as et
 from collections import defaultdict
@@ -63,22 +63,24 @@ def mergeFrames():
 def main():
     bm_reports_list = [*bm_reports]
 
-    try:
+    # Open database connection
+    db = pymysql.connect(host='localhost',
+                         user=settings.DB_USERNAME,
+                         password=settings.DB_PASSWORD,
+                         db='imbalanceElexon')
 
-        # use our connection values to establish a connection
-        conn = psycopg2.connect(settings.DB_CONN_STRING)
-        # create a psycopg2 cursor that can execute queries
-        cursor = conn.cursor()
-        # create a new table with a single column called "name"
-        cursor.execute("""CREATE TABLE tutorials (name char(40));""")
-        # run a SELECT statement - no data in there, but we can try it
-        cursor.execute("""SELECT * from tutorials""")
-        rows = cursor.fetchall()
-        print(rows)
+    # prepare a cursor object using cursor() method
+    cursor = db.cursor()
 
-    except Exception as e:
-        print("Uh oh, can't connect. Invalid dbname, user or password?")
-        print(e)
+    # execute SQL query using execute() method.
+    cursor.execute("SELECT VERSION()")
+
+    # Fetch a single row using fetchone() method.
+    data = cursor.fetchone()
+    print ("Database version : %s " % data)
+
+    # disconnect from server
+    db.close()
 
     #for report in bm_reports_list:
     for report, cols in bm_reports.items():
