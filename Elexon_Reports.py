@@ -1,7 +1,8 @@
 import requests
-import pymysql.cursors
+import pymysql
 import pandas as pd
 from lxml import etree as et
+from sqlalchemy import create_engine
 from collections import defaultdict
 from data_clean import drop_duplicates
 import settings
@@ -52,8 +53,9 @@ def convertToDF(xml, cols):
     if len(sorted_df) > 50:
         sorted_df.drop_duplicates(['settlementPeriod'], keep='first',inplace = True)
 
-    resultsList.append(output)
-    return
+    #resultsList.append(output)
+    #print(sorted_df)
+    return sorted_df
 
 def mergeFrames():
 
@@ -61,33 +63,19 @@ def mergeFrames():
     return
 
 def main():
-    bm_reports_list = [*bm_reports]
 
-    # Open database connection
-    db = pymysql.connect(host='localhost',
-                         user=settings.DB_USERNAME,
-                         password=settings.DB_PASSWORD,
-                         db='imbalanceElexon')
+    engine = create_engine(settings.DB_CONN_STRING)
+    con = engine.connect()
 
-    # prepare a cursor object using cursor() method
-    cursor = db.cursor()
-
-    # execute SQL query using execute() method.
-    cursor.execute("SELECT VERSION()")
-
-    # Fetch a single row using fetchone() method.
-    data = cursor.fetchone()
-    print ("Database version : %s " % data)
-
-    # disconnect from server
-    db.close()
-
-    #for report in bm_reports_list:
+    #for report in bm_reports:
     for report, cols in bm_reports.items():
         xmlReport = getXMLReport(report)
-        convertToDF(xmlReport, cols)
+        df = convertToDF(xmlReport, cols)
+        df.to_sql(cols[0], con, if_exists='append', chunksize=100)
 
-    mergeFrames()
+    # disconnect from server
+    con.close()
+
 
 if __name__ == '__main__':
     main()
